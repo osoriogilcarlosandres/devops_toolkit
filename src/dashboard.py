@@ -1,4 +1,4 @@
-import argparse,subprocess
+'''import argparse,subprocess
 
 
 def dash1():
@@ -33,3 +33,4 @@ def run_command(command):
 command_to_run = ["cmd", "/c", "dir"]
 output = run_command(command_to_run)
 print(output)
+'''

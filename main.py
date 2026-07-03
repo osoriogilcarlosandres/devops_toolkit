@@ -2,9 +2,9 @@
 # main.py
 import argparse
 import sys
-from src.auditor import run_audit
+from src.auditor import run_formated_audit, run_raw_audit
 
-# from src.reporters import generate_report
+from src.reporters import generate_report
 # from src.notifier import send_notification
 
 
@@ -17,7 +17,7 @@ def cmd_audit(args):
     if args.target == "local":
         print("\nAuditando sistema local...\n")
         
-        datos = run_audit()
+        datos = run_formated_audit()
         print(datos)
         
     elif args.target == "api":
@@ -31,7 +31,8 @@ def cmd_report(args):
     """Se ejecuta cuando el usuario escribe: python main.py report ..."""
     print(f"[report] Formato: {args.format} | Destino: {args.output}")
     # Cuando tengas reporters.py listo:
-    # generate_report(format=args.format, output=args.output)
+    
+    generate_report(format=args.format, output=args.output)
 
 
 def cmd_notify(args):

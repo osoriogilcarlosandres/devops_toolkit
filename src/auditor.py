@@ -1,9 +1,6 @@
 import subprocess, re
 
 
-
-
-
 def get_cpu_ram():
     
 #ts gets the cpu and ram
@@ -30,28 +27,14 @@ def get_most_process():
         match = re.search(parternCosumingProcessRegex, linea)
         
         if match:
-
-            if match.group(5)==None:
-                    
-                    datos = {
-                        
-                        "pm": int(match.group(3)),
-                       
-                        "cpu": 0,
-                       
-                        "name": match.group(8).strip()
-                    }
-                    
-            else:
-                datos = {
-                    
-                    
-                    "pm": int(match.group(3)),
-                    
-                    "cpu": float(match.group(5)),
-                    
-                    
-                    "name": match.group(8).strip()
+            datos = {
+                    "handles": int(match.group(1)),
+                    "npm":     int(match.group(2)),
+                    "pm_kb":   int(match.group(3)),
+                    "ws_kb":   int(match.group(4)),
+                    "cpu":     float(match.group(5)) if match.group(5) else 0.0,
+                    "pid":     int(match.group(6)),
+                    "name":    match.group(8).strip()
                     }
             lista_procesos.append(datos)
 
@@ -80,12 +63,12 @@ def get_storage_space():
     return filteredStorageSpace
 
 
-def run_audit():
+def run_formated_audit():
     cpuAndRam = get_cpu_ram()
     Process = get_most_process()
     storage_space = get_storage_space()
 
-    most_process_ram = sorted(Process, key=lambda p: p['pm'], reverse=True)[:10]
+    most_process_ram = sorted(Process, key=lambda p: p['pm_kb'], reverse=True)[:10]
     most_process_cpu = sorted(Process, key=lambda p: p['cpu'], reverse=True)[:10]
 
     ''' tempram = []
@@ -94,7 +77,7 @@ def run_audit():
         most_process_cpu = []
 
         for p in Process:
-            tempram.append(p['pm'])
+            tempram.append(p['pm_kb'])
             tempcpu.append(p['cpu'])
 
         tempram.sort()
@@ -103,7 +86,7 @@ def run_audit():
         tempcpu = tempcpu[:10]
         for t in Process:
             for y in tempram:
-                if t['pm']==y:
+                if t['pm_kb']==y:
                     most_process_ram.append(t)
 
             for u in tempcpu:
@@ -129,14 +112,14 @@ def run_audit():
     for p in complete_audit['process_ram']:
          name = f"{p['name']:<8}"
          cpu = f"{p['cpu']:<7}"
-         ram = f"{p['pm']:<7}"
+         ram = f"{p['pm_kb']:<7}"
          line_ram.append(f"  --Name: {name} | Cpu: {cpu}KB | ram: {ram}KB")
 
     line_cpu = []
     for p in complete_audit['process_cpu']:
          name = f"{p['name']:<8}"
          cpu = f"{p['cpu']:<7}"
-         ram = f"{p['pm']:<7}"
+         ram = f"{p['pm_kb']:<7}"
          line_cpu.append(f"  --Name: {name} | Cpu: {cpu}KB | ram: {ram}KB")
     
     string_most_ram = f"Most consuming processes by ram: {complete_audit['process_ram']}"
@@ -148,3 +131,8 @@ def run_audit():
     return "\n\n".join([string_cpu_ram, string_most_cpu, string_most_ram, string_storage_space])
 
 
+def run_raw_audit():
+    cpuAndRam = get_cpu_ram()
+    Process = get_most_process()
+    storage_space = get_storage_space()
+    return cpuAndRam, Process, storage_space
