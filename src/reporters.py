@@ -1,6 +1,11 @@
+import json, csv, logging
+from . import logger_config
 from pathlib import Path
-import json, csv, time
-from src.auditor import run_raw_audit
+from .auditor import run_raw_audit
+
+
+
+logger = logging.getLogger(__name__)
 
 
 def save_json(datos, output_path):
@@ -12,9 +17,7 @@ def save_json(datos, output_path):
         "StorageSpaceRemaining: ": datos[2][1],
 
     }
-    count = 0
-    count+=1   
-    with open(Path(output_path) / f"report_JSON{str(count)}.json", mode='w', encoding="utf-8") as write_json:
+    with open(Path(output_path) / "report_JSON.json", mode='w', encoding="utf-8") as write_json:
         json.dump(data, write_json, indent=1)
 
 def save_csv(datos, output_path):

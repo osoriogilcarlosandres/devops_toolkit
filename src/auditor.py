@@ -1,7 +1,6 @@
 
-import subprocess, re, logging, logger_config 
-
-
+import subprocess, re, logging
+from . import logger_config
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +54,7 @@ def get_storage_space():
     #this gives the storege space and saves it in storageSpace
     storageSpace = subprocess.run(["powershell", r"Get-PSDrive -PSProvider FileSystem"],
                                 text=True, capture_output=True)
-    print(storageSpace.stdout)
+    
     #this block of code clean the text in storageSpace and gives a list with 
     #2 string items, the first item is the space used and the second is the free space
     # the list is 
@@ -142,4 +141,3 @@ def run_raw_audit():
     storage_space = get_storage_space()
     return cpuAndRam, Process, storage_space
 
-get_storage_space()

@@ -1,22 +1,21 @@
-
-
 #imports
-
 import argparse, sys, logging
 from src.auditor import run_formated_audit, run_raw_audit
 from src.reporters import generate_report
 # from src.notifier import send_notification
 import src.logger_config 
+
+
 logger = logging.getLogger(__name__)
 
 
 def cmd_audit(args):
     """Se ejecuta cuando el usuario escribe: python main.py audit ..."""
     
-    logger.info(f"\n[audit] Target: {args.target}")
+    logger.info(f"[audit] Target: {args.target}")
     
     if args.target == "local":
-        logger.info("\nAuditando sistema local...\n")
+        logger.info("Auditando sistema local...")
         
         datos = run_formated_audit()
         print(datos)
@@ -30,15 +29,13 @@ def cmd_audit(args):
 
 def cmd_report(args):
     """Se ejecuta cuando el usuario escribe: python main.py report ..."""
-    print(f"[report] Formato: {args.format} | Destino: {args.output}")
-    # Cuando tengas reporters.py listo:
-    
+    logger.info(f"[report] Formato: {args.format} | Destino: {args.output}")
     generate_report(format=args.format, output=args.output)
 
 
 def cmd_notify(args):
     """Se ejecuta cuando el usuario escribe: python main.py notify ..."""
-    print(f"[notify] Canal: {args.channel}")
+    logger.info(f"[notify] Canal: {args.channel}")
     # Cuando tengas notifier.py listo:
     # send_notification(channel=args.channel)
 

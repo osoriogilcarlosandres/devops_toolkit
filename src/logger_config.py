@@ -1,5 +1,5 @@
 import logging
-from logging.handlers import RotatingFileHandler
+from logging.handlers import RotatingFileHandler # noqa: F401
 
 #logger.warning("Look at my logger!") "OHHH, loook, i hame my own logger, this is so much fun! "
 
