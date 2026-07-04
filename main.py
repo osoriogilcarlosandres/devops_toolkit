@@ -1,7 +1,7 @@
 #imports
 import argparse, sys, logging
 from src.auditor import run_formated_audit, run_raw_audit
-from src.reporters import generate_report
+from src.reports import generate_report
 # from src.notifier import send_notification
 import src.logger_config 
 

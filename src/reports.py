@@ -1,8 +1,7 @@
-import json, csv, logging
-from . import logger_config
+import json, csv, logging, re
+import src.logger_config as logger_config
 from pathlib import Path
-from .auditor import run_raw_audit
-
+from src.auditor import run_raw_audit
 
 
 logger = logging.getLogger(__name__)
@@ -20,10 +19,10 @@ def save_json(datos, output_path):
     with open(Path(output_path) / "report_JSON.json", mode='w', encoding="utf-8") as write_json:
         json.dump(data, write_json, indent=1)
 
+
 def save_csv(datos, output_path):
-    count= 0
-    count +=1
-    with open(Path(output_path) / f"report_CSV{str(count)}.csv", mode='w') as write_csv:
+
+    with open(Path(output_path) / f"report_CSV.csv", mode='w') as write_csv:
         fieldnames = ['Cpu', 'RAM', 'Procesess','StorageSpaceUsed','StorageSpaceRemaining']
         write_csv = csv.DictWriter(write_csv, delimiter=',',fieldnames = fieldnames)
         write_csv.writeheader()
@@ -33,10 +32,15 @@ def save_csv(datos, output_path):
     
 
 
-def get_output_path(output):
-    outputpath = Path.cwd() / output
+def get_output_path(output, base_path = None):
+
+    #if the output value is invalid for the output path
+    if base_path is None:
+        base_path = Path(__file__).resolve().parent.parent
+    outputpath =  Path(base_path) / output
     #if not Path(outputpath).exists():
     Path(outputpath).mkdir(exist_ok=True, parents=True)
+    
     return Path(outputpath)
 
 
@@ -48,3 +52,5 @@ def generate_report(format, output):
     elif format == "csv":
         save_csv(datos=datos, output_path=output_path)
 
+if __file__ != "__main__":
+    logger.debug("Estas importando reporerts")

@@ -1,5 +1,6 @@
 import logging
 from logging.handlers import RotatingFileHandler # noqa: F401
+from pathlib import Path
 
 #logger.warning("Look at my logger!") "OHHH, loook, i hame my own logger, this is so much fun! "
 
@@ -13,8 +14,10 @@ logger.setLevel(logging.DEBUG)# set minimal log level
 
 #handlers
 console_handler = logging.StreamHandler()
+logs_dir = Path(__file__).resolve().parent.parent / "logs"
+logs_dir.mkdir(parents=True, exist_ok=True)
 file_rotating_handler = RotatingFileHandler(
-    filename="logs/app.log",
+    filename=logs_dir / "app.log",
     maxBytes=3024,
     backupCount=10)
 
