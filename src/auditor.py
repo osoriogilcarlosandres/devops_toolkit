@@ -15,7 +15,7 @@ def get_cpu_ram():
     parternCpuAndRamRegex = r'\d+[\.,]\d+'
     
     filteredCpuAndRam = re.findall(parternCpuAndRamRegex,cpuAndRam.stdout)
-    return filteredCpuAndRam # turple o lista con 2 elemntos creo xd
+    return filteredCpuAndRam # turple o lista condsjfakfidfeqr 2 elemntos creo xd
 #espanol porque me esta costando hacer los test y probablemente me costaria mas si los pongo en ingles
 #esto creo que podria ser mas facilmene testeable si el llamamiento de subprocess pasaria en una funcion diferente 
 def get_most_process():
@@ -76,16 +76,17 @@ def get_storage_space():
     
     return filteredStorageSpace
 
+#TODO tal vez me animo en crear una funcion que ordene los procesos
 
 def run_formated_audit():
     #consigue una lista, lista, lista
     cpuAndRam = get_cpu_ram()
     Process = get_most_process()
     storage_space = get_storage_space()
-    #                   sorted ordena los procesos en Process = get_most_process()
-    #                   key=lambda p: p['pm_kb'] basicamente itera process y evalua 
-    #                   p['pm_kb'] que es la ram y es un int . reverse=True pone numeros grandes primero
-    #                   por ultimo se corta la lista creo de 0 a 9
+    #sorted ordena los procesos en Process = get_most_process()
+    #key=lambda p: p['pm_kb'] basicamente itera process y evalua 
+    #p['pm_kb'] que es la ram y es un int . reverse=True pone numeros grandes primero
+    #por ultimo se corta la lista creo de 0 a 9
     most_process_ram = sorted(Process, key=lambda p: p['pm_kb'], reverse=True)[:10]
     most_process_cpu = sorted(Process, key=lambda p: p['cpu'], reverse=True)[:10]
 
@@ -102,24 +103,37 @@ def run_formated_audit():
     string_cpu_ram = f"Cpu: {complete_audit['cpu']} Ram: {complete_audit['ram']}"
 
     line_ram = []
-    for p in complete_audit['process_ram']:
+    '''
+      for p in complete_audit['process_ram']:
          name = f"{p['name']:<8}"
          cpu = f"{p['cpu']:<7}"
          ram = f"{p['pm_kb']:<7}"
-         line_ram.append(f"  --Name: {name} | Cpu: {cpu}KB | ram: {ram}KB")
+         line_ram.append(f"  --Name: {name} | Cpu: {cpu}KB | ram: {ram}KB")'''
+    for p in complete_audit['process_ram']: # se reccore la lista most_process_ram
+         line_ram.append(
+             f"  --Name: {p['name']}   | Cpu: {p['cpu']} KB | ram: {p['pm_kb']:<2} KB"
+         )
 
     line_cpu = []
-    for p in complete_audit['process_cpu']:
+
+    '''   
+    formato mas bonito pero cambiado para testear 
+      for p in complete_audit['process_cpu']:
          name = f"{p['name']:<8}"
          cpu = f"{p['cpu']:<7}"
          ram = f"{p['pm_kb']:<7}"
          line_cpu.append(f"  --Name: {name} | Cpu: {cpu}KB | ram: {ram}KB")
+    '''
+    for p in complete_audit['process_cpu']:  # se reccore la lista most_process_cpu
+         line_cpu.append(
+             f"  --Name: {p['name']}   | Cpu: {p['cpu']} KB | ram: {p['pm_kb']:<2} KB"
+         )
     
     string_most_ram = f"Most consuming processes by ram: {complete_audit['process_ram']}"
     string_most_cpu = f"Most consuming processes by cpu: {complete_audit['process_cpu']}"
     string_most_cpu = "Most consuming processes by cpu:\n\n" + "\n".join(line_cpu)
     string_most_ram = "Most consuming processes by ram:\n\n" + "\n".join(line_ram)
-    string_storage_space = f"Storage used: {complete_audit['storage_used']}GB | Storage remaining: {complete_audit['storage_ramaining']}GB\n"
+    string_storage_space = f"Storage used: {complete_audit['storage_used']}GB | Storage remaining: {complete_audit['storage_ramaining']}GB"
 
     #retorna todos los strings formateados con .join
     return "\n\n".join([string_cpu_ram, string_most_cpu, string_most_ram, string_storage_space])
