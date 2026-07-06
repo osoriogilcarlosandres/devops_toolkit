@@ -1,6 +1,6 @@
 #imports
 import argparse, sys, logging
-from src.auditor import run_formated_audit, run_raw_audit
+from src.auditor import run_formated_audit, run_raw_audit, audit_api
 from src.reports import generate_report
 # from src.notifier import send_notification
 import src.logger_config 
@@ -25,6 +25,8 @@ def cmd_audit(args):
             logger.error("Error: --url es requerido cuando target es 'api'")
             sys.exit(1)
         print(f"Auditando API: {args.url}")
+        audit__api = audit_api(args.url)
+        print(audit__api)
 
 
 def cmd_report(args):

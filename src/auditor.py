@@ -1,5 +1,5 @@
 
-import subprocess, re, logging
+import subprocess, re, logging, requests
 import src.logger_config as logger_config
 
 logger = logging.getLogger(__name__)
@@ -144,6 +144,35 @@ def run_raw_audit():
     Process = get_most_process()
     storage_space = get_storage_space()
     return cpuAndRam, Process, storage_space
+
+
+def get_api_latency(response):
+
+    return response.elapsed.total_seconds()
+
+def get_api_status_code(response):
+
+    return response.status_code
+
+def save_api_results(response, api_url):
+
+    pass
+
+def print_on_console(status_code, latency, api_url):
+    
+    return f"Audited API: {api_url}. Status code: {status_code}. Lantency: {latency}."
+    
+def audit_api(api_url):
+    
+    response = requests.get(api_url)
+    status_code = get_api_status_code(response)
+    latency = get_api_latency(response)
+    print = print_on_console(status_code, latency, api_url)
+    #save_api_results(status_code,latency, api_url)
+    return print
+    
+    
+
 
 if __file__ != "__main__":
     logger.debug("Estas importando auditor.py desde otro archivo")

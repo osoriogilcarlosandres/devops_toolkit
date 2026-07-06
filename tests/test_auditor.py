@@ -1,10 +1,18 @@
 import pytest, sys
 from pathlib import Path
-from unittest.mock import patch
-
+from unittest.mock import patch, MagicMock
+#esto sirve para que import funcione 
 audit_path = Path(__file__).resolve().parent.parent
-sys.path.append(str(audit_path))
-from src.auditor import get_cpu_ram, get_most_process, get_storage_space, run_formated_audit, run_raw_audit
+sys.path.append(str(audit_path)) #esto basicamente agrega el audit_path para que import pueda buscar cosas ahi
+from src.auditor import get_cpu_ram, get_most_process, get_storage_space, run_formated_audit, run_raw_audit, get_api_latency, audit_api
+
+
+@pytest.fixture
+def response():
+    fake_response = MagicMock()
+    fake_response.elapsed.total_seconds.return_value = 0.123
+    fake_response.status_code = 200
+    return fake_response
 
 
 @patch(target='src.auditor.subprocess.run')
@@ -160,4 +168,24 @@ def test_run_raw_audit_get_cpu_ram(mock_subprocess_run):
     assert result[2] == ['1843.2', '204.8']
     assert mock_subprocess_run.call_count == 3
 
-    
+
+@patch("src.auditor.requests.get")
+def test_audit_api(mock_requests_get):
+    fake_response = MagicMock()
+    mock_requests_get.return_value = fake_response
+    fake_response.elapsed.total_seconds.return_value = 0.123
+    fake_response.status_code = 200
+    result = audit_api("https://api.github.com")
+    assert result == "Audited API: https://api.github.com. Status code: 200. Lantency: 0.123."
+
+
+def test_get_api_latency(response):
+    assert get_api_latency(response) == 0.123
+
+
+def test_get_api_status_code(response):
+    assert response.status_code == 200
+
+
+def test_save_api_results(response):
+    assert response.status_code == 200

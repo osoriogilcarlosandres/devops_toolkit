@@ -12,6 +12,11 @@ my_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(mes
 logger = logging.getLogger("")
 logger.setLevel(logging.DEBUG)# set minimal log level
 
+# Reduce ruido de librerías externas
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+logging.getLogger("urllib3.connectionpool").setLevel(logging.WARNING)
+logging.getLogger("requests").setLevel(logging.WARNING)
+
 #handlers
 console_handler = logging.StreamHandler()
 logs_dir = Path(__file__).resolve().parent.parent / "logs"
