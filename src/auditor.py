@@ -1,29 +1,23 @@
 
 import subprocess, re, logging, requests
 from src.reports import temp_save_api, temp_save_local
-if __file__ == "__main__":
-    import logger_config as logger_config
-    
-else:
-    
-    
-    import src.logger_config as logger_config
+from pathlib import Path
+from src.config_parser import get_command, get_config
 logger = logging.getLogger(__name__)
 
+config = get_config()
 
-def run_powershell_command(command, *args):
-    command_runed=subprocess.run(["powershell", command, *args]
+def run_command(action):
+    shell, command = get_command(action)
+    command_runed=subprocess.run([shell, command]
                     , text=True, capture_output=True)
     
     return command_runed
 
 
 def get_cpu_ram():
-    
-    logger.info("Ejecutando Get-Counter")
-    
-    cpuAndRam=run_powershell_command( "Get-Counter", r"'\Processor(_Total)\% Processor Time', '\Memory\% Committed Bytes In Use'")
-    return cpuAndRam
+
+    return run_command("CpuAndRam")
 
 def parse_cpu_ram(arg):
     parternCpuAndRamRegex = r'\d+[\.,]\d+'
@@ -36,9 +30,7 @@ def parse_cpu_ram(arg):
 
 
 def get_most_process():
-  
-    mostConsumingProcess = run_powershell_command(r"Get-Process | Select-Object -First 20")
-    return mostConsumingProcess
+  return run_command("Process")
     
 
 
@@ -77,8 +69,7 @@ def parse_processes(arg):
     '''
 
 def get_storage_space():
-    storageSpace = run_powershell_command( r"Get-PSDrive")
-    return storageSpace
+    return run_command("Storage")
    
 def parse_storage(arg):
     partenStorageSpaceRegex = r'\d+\.\d+'
@@ -101,11 +92,11 @@ def evaluete_conditions(parse_audit_instance):
     storage_space_remaining = parse_audit[2][1]
     total_storage = storage_space_used + storage_space_remaining
     storage_percentage_remainig = (storage_space_remaining / total_storage) * 100
-    if cpu > 90:
+    if cpu > config["ConditionsToEvaluete"]["CpuMax"]:
         logger.info("Cpu arriba de 90%")
-    if ram>80:
+    if ram> config["ConditionsToEvaluete"]["RamMax"]:
         logger.info("Ram arriba del 80%")
-    if storage_percentage_remainig<20:
+    if storage_percentage_remainig< config["ConditionsToEvaluete"]["FreeStorageMin"]:
         logger.info("Espacio de almacenamiento libre menos del 20%")
 
 
@@ -116,7 +107,6 @@ def run_raw_audit():
     cpuAndRam = get_cpu_ram()
     Process = get_most_process()
     storage_space = get_storage_space()
-
     return cpuAndRam, Process, storage_space
 
 def parsed_audit():
@@ -156,12 +146,7 @@ def get_formated_audit(parse_audit_instance_local):
     string_cpu_ram = f"Cpu: {complete_audit['cpu']} Ram: {complete_audit['ram']}"
 
     line_ram = []
-    '''
-      for p in complete_audit['process_ram']:
-         name = f"{p['name']:<8}"
-         cpu = f"{p['cpu']:<7}"
-         ram = f"{p['ram_kb']:<7}"
-         line_ram.append(f"  --Name: {name} | Cpu: {cpu}KB | ram: {ram}KB")'''
+
     for p in complete_audit['process_ram']: # se reccore la lista most_process_ram
          line_ram.append(
              f"  --Name: {p['name']}   | Cpu: {p['cpu']} KB | ram: {p['ram_kb']:<2} KB"
@@ -169,14 +154,7 @@ def get_formated_audit(parse_audit_instance_local):
 
     line_cpu = []
 
-    '''   
-    formato mas bonito pero cambiado para testear 
-      for p in complete_audit['process_cpu']:
-         name = f"{p['name']:<8}"
-         cpu = f"{p['cpu']:<7}"
-         ram = f"{p['ram_kb']:<7}"
-         line_cpu.append(f"  --Name: {name} | Cpu: {cpu}KB | ram: {ram}KB")
-    '''
+
     for p in complete_audit['process_cpu']:  # se reccore la lista most_process_cpu
          line_cpu.append(
              f"  --Name: {p['name']}   | Cpu: {p['cpu']} KB | ram: {p['ram_kb']:<2} KB"

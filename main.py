@@ -3,8 +3,11 @@ import argparse, sys, logging
 from src.auditor import  audit_api, local_audit
 from src.reports import generate_report
 # from src.notifier import send_notification
-import src.logger_config 
 
+
+from src.config_parser import get_config
+
+config = get_config()
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +28,8 @@ def cmd_audit(args):
             logger.error("Error: --url es requerido cuando target es 'api'")
             sys.exit(1)
         print(f"Auditando API: {args.url}")
-        audit__api = audit_api(args.url)
-        print(audit__api)
+        audit_result = audit_api(args.url)
+        print(audit_result)
 
 
 def cmd_report(args):
@@ -38,11 +41,9 @@ def cmd_report(args):
 def cmd_notify(args):
     """Se ejecuta cuando el usuario escribe: python main.py notify ..."""
     logger.info(f"[notify] Canal: {args.channel}")
-    # Cuando tengas notifier.py listo:
     # send_notification(channel=args.channel)
 
 
-# --- Definición del CLI ---
 
 def build_parser():
     parser = argparse.ArgumentParser(
@@ -72,12 +73,12 @@ def build_parser():
     report.add_argument(
         "--format",
         choices=["json", "csv", "html"],
-        default="json",
+        default=config["default_format"],
         help="Formato del reporte (default: json)"
     )
     report.add_argument(
         "--output",
-        default="./reports/",
+        default=[config["default_output"]],
         help="Carpeta donde guardar el reporte (default: ./reports/)"
     )
     report.set_defaults(func=cmd_report)

@@ -1,11 +1,11 @@
-# --- LOGS DEL PROYECTO ---
+
 logs/
 *.log
 
-# --- CONFIGURACIÓN Y SECRETOS ---
+
 .env
 
-# --- PYTHON ---
+
 __pycache__/
 *.pyc
 *.pyo
@@ -15,17 +15,17 @@ env/
 venv/
 .venv/
 
-# --- TESTS ---
+
 .pytest_cache/
 .coverage
 htmlcov/
 
-# --- REPORTES GENERADOS (Opcional) ---
+
 reports/
 *.json
 *.csv
 *.html
 
-# --- SISTEMA OPERATIVO ---
+
 .DS_Store
 Thumbs.db

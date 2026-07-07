@@ -1,15 +1,12 @@
 import json, csv, logging, os
 import src.logger_config as logger_config
 from pathlib import Path
-from typing import Any, Callable
-from functools import wraps
+from src.config_parser import get_config
 
+config = get_config()
 
 logger = logging.getLogger(__name__)
 #ok basicamente aqui 
-type Data = tuple
-type output = Path
-type ExportFn = Callable[[Data, output], None]
 
 temp_json = Path("session_json.json")
 
@@ -41,7 +38,7 @@ def unpack_data(data) :
     
 
 def save_json(data, output_path):
-
+    
     logger.info('Generating report')
     with open(Path(output_path) / "report_JSON.json", mode='w', encoding="utf-8") as write_json:
         json.dump(data, write_json, indent=4)
@@ -57,7 +54,7 @@ def save_csv(data, output_path):
         write_csv.writerow(data)
 
     
-exporters: dict[str, ExportFn] = {
+exporters= {
     "json": save_json,
     "csv": save_csv
 }

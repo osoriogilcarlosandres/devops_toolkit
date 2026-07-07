@@ -1,0 +1,31 @@
+Commands:
+  windows:
+    shell: "powershell"
+    CpuAndRam: "Get-Counter '\\Processor(_Total)\\% Processor Time', '\\Memory\\% Committed Bytes In Use'"
+
+    Process: "Get-Process | Select-Object -First 20"
+    Storage: "Get-PSDrive"
+      
+  linux:
+    sell: "bash"
+    CpuAndRam: "`top -bn1"
+    Process: "Select-Object -First 20`"
+    Storage: "df -h"
+
+
+
+ConditionsToEvaluete:
+  CpuMax: 90
+  RamMax: 80
+  FreeStorageMin: 20
+
+
+critical_files:
+  - ".env"
+  - "config.yaml"
+  - "settings.json"
+
+default_format:
+  "json"
+default_output:
+  "./reports/"
