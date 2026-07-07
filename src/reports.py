@@ -1,9 +1,9 @@
-import json, csv, logging
+import json, csv, logging, os
 import src.logger_config as logger_config
 from pathlib import Path
-from src.auditor import run_raw_audit
 from typing import Any, Callable
 from functools import wraps
+
 
 logger = logging.getLogger(__name__)
 #ok basicamente aqui 
@@ -11,6 +11,21 @@ type Data = tuple
 type output = Path
 type ExportFn = Callable[[Data, output], None]
 
+temp_json = Path("session_json.json")
+
+def load_history(): 
+    if not temp_json.exists():
+        return[]
+    try:
+        with open(temp_json, mode='r', encoding="utf-8") as file:
+            return json.load(file)
+    except (json.JSONDecodeError, IOError) as e:
+        logging.error(f"Error al leer el historial: {e}")  # Bloque A: Excepciones
+        return []
+
+def save_history(data):
+ with open(temp_json, mode='w', encoding="utf-8") as file:
+     json.dump(data, file, indent=4)
 
 def unpack_data(data) :
     unpackdata = {
@@ -29,7 +44,7 @@ def save_json(data, output_path):
 
     logger.info('Generating report')
     with open(Path(output_path) / "report_JSON.json", mode='w', encoding="utf-8") as write_json:
-        json.dump(data, write_json, indent=1)
+        json.dump(data, write_json, indent=4)
 
 
 def save_csv(data, output_path):
@@ -60,12 +75,23 @@ def get_output_path(output, base_path = None):
     
     return Path(outputpath)
 
+def temp_save_local(local_intance):
+    data=unpack_data(local_intance)
+    history = load_history()
+    history.append(data)
+    save_history(history)
+    
+
+def temp_save_api(arg):
+    return
 
 
 def generate_report(format, output):
     output_path = get_output_path(output)
     export = exporters.get(format)
-    export(unpack_data(run_raw_audit()), output_path)
+    history = load_history()
+    export(history, output_path)
+    os.remove(temp_json) # esto remuve el archivo temporal cada vez que se crea un reporte
 
 if __file__ != "__main__":
     logger.debug("Estas importando reporerts")

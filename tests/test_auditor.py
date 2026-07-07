@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock
 #esto sirve para que import funcione 
 audit_path = Path(__file__).resolve().parent.parent
 sys.path.append(str(audit_path)) #esto basicamente agrega el audit_path para que import pueda buscar cosas ahi
-from src.auditor import get_cpu_ram, get_most_process, get_storage_space, run_formated_audit, run_raw_audit, get_api_latency, audit_api
+from src.auditor import get_cpu_ram, get_most_process, get_storage_space, get_formated_audit, run_raw_audit, get_api_latency, audit_api
 
 
 @pytest.fixture
@@ -42,7 +42,7 @@ def test_get_most_process(mock_subprocess_run):
     assert result == [{
         "handles": 1001,
         "npm": 2045,
-        "pm_kb": 1200,
+        "ram_kb": 1200,
         "ws_kb": 24,
         "cpu": 3.5,
         "id": 1,
@@ -52,7 +52,7 @@ def test_get_most_process(mock_subprocess_run):
     {
         "handles": 0,
         "npm": 1,
-        "pm_kb": 0,
+        "ram_kb": 0,
         "ws_kb": 0,
         "cpu": 0.0,
         "id": 0,
@@ -76,7 +76,7 @@ def test_get_storage_space(mock_subprocess_run):
 
 
 @patch(target='src.auditor.subprocess.run')
-def test_run_formated_audit(mock_subprocess_run):
+def test_get_formated_audit(mock_subprocess_run):
     
     class False_get_cpu_ram():
         stdout = "Texto de relleno... CPU: 12.5% y RAM: 45,8 bytes..."
@@ -101,7 +101,7 @@ def test_run_formated_audit(mock_subprocess_run):
         False_get_storage_space(),
     ]
 
-    result = run_formated_audit()
+    result = get_formated_audit()
     
     assert result == """Cpu: 12.5 Ram: 45,8
 
@@ -151,7 +151,7 @@ def test_run_raw_audit_get_cpu_ram(mock_subprocess_run):
     assert result[1] == [{
         "handles": 1001,
         "npm": 2045,
-        "pm_kb": 1200,
+        "ram_kb": 1200,
         "ws_kb": 24,
         "cpu": 3.5,
         "id": 1,
@@ -159,7 +159,7 @@ def test_run_raw_audit_get_cpu_ram(mock_subprocess_run):
     }, {
         "handles": 0,
         "npm": 1,
-        "pm_kb": 0,
+        "ram_kb": 0,
         "ws_kb": 0,
         "cpu": 0.0,
         "id": 0,

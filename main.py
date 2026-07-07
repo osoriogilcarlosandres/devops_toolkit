@@ -1,6 +1,6 @@
 #imports
 import argparse, sys, logging
-from src.auditor import run_formated_audit, run_raw_audit, audit_api
+from src.auditor import  audit_api, local_audit
 from src.reports import generate_report
 # from src.notifier import send_notification
 import src.logger_config 
@@ -14,13 +14,13 @@ def cmd_audit(args):
     
     logger.info(f"[audit] Target: {args.target}")
     
-    if args.target == "local":
+    if args.target.lower() == "local":
         logger.info("Auditando sistema local...")
         
-        datos = run_formated_audit()
-        print(datos)
+        local_audit()
+
         
-    elif args.target == "api":
+    elif args.target.lower() == "api":
         if not args.url:
             logger.error("Error: --url es requerido cuando target es 'api'")
             sys.exit(1)
@@ -32,7 +32,7 @@ def cmd_audit(args):
 def cmd_report(args):
     """Se ejecuta cuando el usuario escribe: python main.py report ..."""
     logger.info(f"[report] Formato: {args.format} | Destino: {args.output}")
-    generate_report(format=args.format, output=args.output)
+    generate_report(format=args.format.lower(), output=args.output)
 
 
 def cmd_notify(args):

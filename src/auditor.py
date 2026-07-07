@@ -1,36 +1,54 @@
 
 import subprocess, re, logging, requests
-import src.logger_config as logger_config
-
+from src.reports import temp_save_api, temp_save_local
+if __file__ == "__main__":
+    import logger_config as logger_config
+    
+else:
+    
+    
+    import src.logger_config as logger_config
 logger = logging.getLogger(__name__)
+
+
+def run_powershell_command(command, *args):
+    command_runed=subprocess.run(["powershell", command, *args]
+                    , text=True, capture_output=True)
+    
+    return command_runed
 
 
 def get_cpu_ram():
     
-#ts gets the cpu and ram
-    cpuAndRam=subprocess.run(["powershell", "Get-Counter", r"'\Processor(_Total)\% Processor Time', '\Memory\% Committed Bytes In Use'"]
-                    , text=True, capture_output=True)
-    #support for english consols and spanish
+    logger.info("Ejecutando Get-Counter")
+    
+    cpuAndRam=run_powershell_command( "Get-Counter", r"'\Processor(_Total)\% Processor Time', '\Memory\% Committed Bytes In Use'")
+    return cpuAndRam
 
+def parse_cpu_ram(arg):
     parternCpuAndRamRegex = r'\d+[\.,]\d+'
     
-    filteredCpuAndRam = re.findall(parternCpuAndRamRegex,cpuAndRam.stdout)
-    return filteredCpuAndRam # turple o lista condsjfakfidfeqr 2 elemntos creo xd
-#espanol porque me esta costando hacer los test y probablemente me costaria mas si los pongo en ingles
-#esto creo que podria ser mas facilmene testeable si el llamamiento de subprocess pasaria en una funcion diferente 
+    filteredCpuAndRam = re.findall(parternCpuAndRamRegex,arg.stdout)
+    #convierte a floats el cpu y ram y si no encuentra nada devuelve dos none y si encuentra solo devuelve el seguund como none
+    return (float(filteredCpuAndRam[0]) if len(filteredCpuAndRam) > 0 else None, 
+            float(filteredCpuAndRam[1]) if len(filteredCpuAndRam) > 1 else None)
+   
+
+
 def get_most_process():
+  
+    mostConsumingProcess = run_powershell_command(r"Get-Process | Select-Object -First 20")
+    return mostConsumingProcess
+    
 
 
-    #ts get the porcess
-    mostConsumingProcess = subprocess.run(["powershell",r"`Get-Process"], 
-                                        text=True, capture_output=True)
-    #TODO se me olvido incluir el SI en todo el programa xd tal vez algun dia me animo a corregir esto 
-    #                                    Han    NPM(K)   PM(K)   WS(K)   CPU(s)      Id      SI   ProcessName
+def parse_processes(arg):
+        #                                    Han    NPM(K)   PM(K)   WS(K)   CPU(s)      Id      SI   ProcessName
     parternCosumingProcessRegex = r"^\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+([\d.]+)?\s+(\d+)\s+(\d)\s+(.+)$"
     lista_procesos = [] # lista retornada 
     # lista creo xd.  retorna el subprocess  se eliminan los espacios de lo que 
     #atras y adelante y se hace split en cada salto de linea 
-    lineasProcesses=mostConsumingProcess.stdout.strip().split('\n')
+    lineasProcesses=arg.stdout.strip().split('\n')
     # se recorre la lista anterior con cada item 
     # siendo una linea de la tabla que da get- process
     for linea in lineasProcesses:
@@ -42,7 +60,7 @@ def get_most_process():
             datos = {
                     "handles": int(match.group(1)),
                     "npm":     int(match.group(2)),
-                    "pm_kb":   int(match.group(3)),
+                    "ram_kb":   int(match.group(3)),
                     "ws_kb":   int(match.group(4)),
                     # aveces el cpu puede venir vacio
                     "cpu":     float(match.group(5)) if match.group(5) else 0.0, 
@@ -58,36 +76,71 @@ def get_most_process():
         print(f"Name: {p['name']}\t Ram: {p['pm']}\t Cpu: {p['cpu']}")
     '''
 
-
 def get_storage_space():
-
-    #this gives the storege space and saves it in storageSpace
-    storageSpace = subprocess.run(["powershell", r"Get-PSDrive -PSProvider FileSystem"],
-                                text=True, capture_output=True)
-    
-    #this block of code clean the text in storageSpace and gives a list with 
-    #2 string items, the first item is the space used and the second is the free space
-    # the list is 
+    storageSpace = run_powershell_command( r"Get-PSDrive")
+    return storageSpace
+   
+def parse_storage(arg):
     partenStorageSpaceRegex = r'\d+\.\d+'
 
-    filteredStorageSpace = re.findall(partenStorageSpaceRegex, storageSpace.stdout)
+    filteredStorageSpace = re.findall(partenStorageSpaceRegex, arg.stdout)
 
    
+    final_list = []
+    for floats in filteredStorageSpace:
+        final_list.append(float(floats))
+    return final_list
+
+
     
-    return filteredStorageSpace
+def evaluete_conditions(parse_audit_instance):
+    parse_audit = parse_audit_instance
+    cpu = parse_audit[0][0]
+    ram = parse_audit[0][1]
+    storage_space_used = parse_audit[2][0] 
+    storage_space_remaining = parse_audit[2][1]
+    total_storage = storage_space_used + storage_space_remaining
+    storage_percentage_remainig = (storage_space_remaining / total_storage) * 100
+    if cpu > 90:
+        logger.info("Cpu arriba de 90%")
+    if ram>80:
+        logger.info("Ram arriba del 80%")
+    if storage_percentage_remainig<20:
+        logger.info("Espacio de almacenamiento libre menos del 20%")
 
-#TODO tal vez me animo en crear una funcion que ordene los procesos
 
-def run_formated_audit():
-    #consigue una lista, lista, lista
+    
+
+
+def run_raw_audit():
     cpuAndRam = get_cpu_ram()
     Process = get_most_process()
     storage_space = get_storage_space()
+
+    return cpuAndRam, Process, storage_space
+
+def parsed_audit():
+    raw_audit=run_raw_audit()
+    parsed_cpu_ram =parse_cpu_ram(raw_audit[0])
+    parsed_processes=parse_processes(raw_audit[1])
+    parsed_storage=parse_storage(raw_audit[2])
+    return parsed_cpu_ram,  parsed_processes , parsed_storage
+
+
+
+
+    
+def get_formated_audit(parse_audit_instance_local):
+    parse_audit_instance= parse_audit_instance_local
+    evaluete_conditions(parse_audit_instance)
+    cpuAndRam = parse_audit_instance[0]
+    Process = parse_audit_instance[1]
+    storage_space = parse_audit_instance[2]
     #sorted ordena los procesos en Process = get_most_process()
-    #key=lambda p: p['pm_kb'] basicamente itera process y evalua 
-    #p['pm_kb'] que es la ram y es un int . reverse=True pone numeros grandes primero
+    #key=lambda p: p['ram_kb'] basicamente itera process y evalua 
+    #p['ram_kb'] que es la ram y es un int . reverse=True pone numeros grandes primero
     #por ultimo se corta la lista creo de 0 a 9
-    most_process_ram = sorted(Process, key=lambda p: p['pm_kb'], reverse=True)[:10]
+    most_process_ram = sorted(Process, key=lambda p: p['ram_kb'], reverse=True)[:10]
     most_process_cpu = sorted(Process, key=lambda p: p['cpu'], reverse=True)[:10]
 
     # se crea un diccionario con cada valor importante individual
@@ -107,11 +160,11 @@ def run_formated_audit():
       for p in complete_audit['process_ram']:
          name = f"{p['name']:<8}"
          cpu = f"{p['cpu']:<7}"
-         ram = f"{p['pm_kb']:<7}"
+         ram = f"{p['ram_kb']:<7}"
          line_ram.append(f"  --Name: {name} | Cpu: {cpu}KB | ram: {ram}KB")'''
     for p in complete_audit['process_ram']: # se reccore la lista most_process_ram
          line_ram.append(
-             f"  --Name: {p['name']}   | Cpu: {p['cpu']} KB | ram: {p['pm_kb']:<2} KB"
+             f"  --Name: {p['name']}   | Cpu: {p['cpu']} KB | ram: {p['ram_kb']:<2} KB"
          )
 
     line_cpu = []
@@ -121,12 +174,12 @@ def run_formated_audit():
       for p in complete_audit['process_cpu']:
          name = f"{p['name']:<8}"
          cpu = f"{p['cpu']:<7}"
-         ram = f"{p['pm_kb']:<7}"
+         ram = f"{p['ram_kb']:<7}"
          line_cpu.append(f"  --Name: {name} | Cpu: {cpu}KB | ram: {ram}KB")
     '''
     for p in complete_audit['process_cpu']:  # se reccore la lista most_process_cpu
          line_cpu.append(
-             f"  --Name: {p['name']}   | Cpu: {p['cpu']} KB | ram: {p['pm_kb']:<2} KB"
+             f"  --Name: {p['name']}   | Cpu: {p['cpu']} KB | ram: {p['ram_kb']:<2} KB"
          )
     
     string_most_ram = f"Most consuming processes by ram: {complete_audit['process_ram']}"
@@ -134,16 +187,18 @@ def run_formated_audit():
     string_most_cpu = "Most consuming processes by cpu:\n\n" + "\n".join(line_cpu)
     string_most_ram = "Most consuming processes by ram:\n\n" + "\n".join(line_ram)
     string_storage_space = f"Storage used: {complete_audit['storage_used']}GB | Storage remaining: {complete_audit['storage_ramaining']}GB"
-
+    final_string = "\n\n".join([string_cpu_ram, string_most_cpu, string_most_ram, string_storage_space])
+    return final_string
     #retorna todos los strings formateados con .join
-    return "\n\n".join([string_cpu_ram, string_most_cpu, string_most_ram, string_storage_space])
+    
 
+def local_audit():
+    parse_audit_instance = parsed_audit()
+    print(get_formated_audit(parse_audit_instance))
+    temp_save_local(parse_audit_instance)
 
-def run_raw_audit():
-    cpuAndRam = get_cpu_ram()
-    Process = get_most_process()
-    storage_space = get_storage_space()
-    return cpuAndRam, Process, storage_space
+    
+
 
 
 def get_api_latency(response):
@@ -161,9 +216,13 @@ def save_api_results(response, api_url):
 def print_on_console(status_code, latency, api_url):
     
     return f"Audited API: {api_url}. Status code: {status_code}. Lantency: {latency}."
-    
+
+
+
+
+
+
 def audit_api(api_url):
-    
     response = requests.get(api_url)
     status_code = get_api_status_code(response)
     latency = get_api_latency(response)
@@ -171,8 +230,5 @@ def audit_api(api_url):
     #save_api_results(status_code,latency, api_url)
     return print
     
-    
-
-
-if __file__ != "__main__":
+if __file__ == "__main__":
     logger.debug("Estas importando auditor.py desde otro archivo")
