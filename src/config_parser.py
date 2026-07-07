@@ -45,7 +45,7 @@ def get_config():
 
 
 def get_current_os():
-    system = platform.system().lower()
+    system=platform.system().lower()
     return system
 
 
