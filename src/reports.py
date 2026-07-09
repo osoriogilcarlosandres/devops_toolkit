@@ -1,14 +1,14 @@
 import json, csv, logging, os
-import src.logger_config as logger_config
 from pathlib import Path
 from src.config_parser import get_config
 
 config = get_config()
 
 logger = logging.getLogger(__name__)
-#ok basicamente aqui 
+
 
 temp_json = Path("session_json.json")
+
 
 def load_history(): 
     if not temp_json.exists():
@@ -20,16 +20,21 @@ def load_history():
         logging.error(f"Error al leer el historial: {e}")  # Bloque A: Excepciones
         return []
 
+
+
+
+
+
 def save_history(data):
  with open(temp_json, mode='w', encoding="utf-8") as file:
-     json.dump(data, file, indent=4)
+     json.dump(data, file, indent=1)
 
 
 
 def save_json(data, output_path):
     
     with open(Path(output_path) / "report_JSON.json", mode='w', encoding="utf-8") as write_json:
-        json.dump(data, write_json, indent=4)
+        json.dump(data, write_json, indent=1)
 
 
 def save_csv(data, output_path):

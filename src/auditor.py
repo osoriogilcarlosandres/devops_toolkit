@@ -2,7 +2,7 @@
 import subprocess, logging, requests, json, time
 from src.reports import temp_save_api, temp_save_local
 from src.config_parser import get_command, get_config
-from src.notifer import set_conditions
+from src.notifer import send_notification
 from pathlib import Path
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ def organized_commands():
     
 
 
-def evaluete_conditions(local_audit_instance):
+def evaluete_conditions(local_audit_instance, formated_local_audit_instance):
     org_dict = local_audit_instance
     cpu = org_dict["CPU_Usage_Percent"]
     ram = org_dict["RAM_Usage_Percent"]
@@ -88,9 +88,11 @@ def evaluete_conditions(local_audit_instance):
     
     if not warnings_found:
         logger.info(f"Successful local audit. CPU at {cpu:.3f}. Ram at {ram:.3f}. Free storage {storage_space_remaining:.3f}")
-
+    '''formated_org_dict = f"""CPU Usage Percent: {org_dict["CPU_Usage_Percent"]} \
+                            RAM Usage Percent: {org_dict["RAM_Usage_Percent"]}"""
+'''
     return {
-        "Metrics": org_dict,
+        "Metrics": formated_local_audit_instance,
         "Alerts_found": warnings_found,
         "status": "DANGER" if warnings_found else "OK"
 
@@ -107,8 +109,8 @@ def evaluete_critical_files():
             logger.warning(f"The file {name} was not found.")
     
         
-def get_formated_audit(evaluete_conditions):
-    org_audit= evaluete_conditions
+def get_formated_audit(local_audit_instance):
+    org_audit= local_audit_instance
 
     most_process_ram = sorted(org_audit["Processes"], key=lambda p: p["Ram"], reverse=True)[:10]
     most_process_cpu = sorted(org_audit["Processes"], key=lambda p: p["CPU_Percent"], reverse=True)[:10]
@@ -142,16 +144,17 @@ def get_formated_audit(evaluete_conditions):
 def local_audit():
     
     local_audit_instance = organized_commands()
-    print(get_formated_audit(local_audit_instance))
-    conditions = evaluete_conditions(local_audit_instance)
+    fortamted_org_dict = get_formated_audit(local_audit_instance)
+    print(fortamted_org_dict)
+    conditions = evaluete_conditions(local_audit_instance, fortamted_org_dict)
     evaluete_critical_files()
     temp_save_local(local_audit_instance)
-    set_conditions(conditions)
+    send_notification(conditions = conditions)
 
 
 def print_on_console(status_code, latency, api_url):
      
-    print(f"Audited API: {api_url}. Status code: {status_code}. Lantency: {latency}.")
+    return f"Audited API: {api_url}. Status code: {status_code}. Lantency: {latency}."
 
 
 def audit_api(api_url):
@@ -160,7 +163,8 @@ def audit_api(api_url):
     status_code = response.status_code
     latency = time.time() - start_time
     if status_code == 200:
-        print_on_console(status_code, latency, api_url)
+        pconsol = print_on_console(status_code, latency, api_url)
+        print(pconsol)
         logger.info(f"{api_url} OK in {latency}")
     if status_code > 500:
         logger.error(f"{api_url} FAIL. Status Code: {status_code}")

@@ -2,7 +2,7 @@
 import argparse, sys, logging
 from src.auditor import  audit_api, local_audit
 from src.reports import generate_report
-# from src.notifier import send_notification
+from src.notifer import send_notification
 
 
 from src.config_parser import get_config
@@ -39,7 +39,7 @@ def cmd_report(args):
 def cmd_notify(args):
     """Se ejecuta cuando el usuario escribe: python main.py notify ..."""
     logger.info(f"[notify] Canal: {args.channel}")
-    # send_notification(channel=args.channel)
+    send_notification(channel=args.channel)
 
 
 

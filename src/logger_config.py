@@ -23,7 +23,6 @@ logs_dir = Path(__file__).resolve().parent.parent / "logs"
 logs_dir.mkdir(parents=True, exist_ok=True)
 file_rotating_handler = RotatingFileHandler(
     filename=logs_dir / "app.log",
-    maxBytes=3024,
     backupCount=10)
 
 
