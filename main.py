@@ -27,9 +27,7 @@ def cmd_audit(args):
         if not args.url:
             logger.error("Error: --url es requerido cuando target es 'api'")
             sys.exit(1)
-        print(f"Auditando API: {args.url}")
-        audit_result = audit_api(args.url)
-        print(audit_result)
+        audit_api(args.url)
 
 
 def cmd_report(args):
@@ -78,7 +76,7 @@ def build_parser():
     )
     report.add_argument(
         "--output",
-        default=[config["default_output"]],
+        default=config["default_output"],
         help="Carpeta donde guardar el reporte (default: ./reports/)"
     )
     report.set_defaults(func=cmd_report)
@@ -88,6 +86,7 @@ def build_parser():
     notify.add_argument(
         "--channel",
         choices=["slack", "discord"],
+        
         required=True,
         help="Canal de notificación"
     )
@@ -102,3 +101,4 @@ if __name__ == "__main__":
     parser = build_parser()
     args = parser.parse_args()
     args.func(args)  # Llama a cmd_audit, cmd_report o cmd_notify según el comando
+

@@ -1,7 +1,9 @@
 
-import subprocess, logging, requests, json
+import subprocess, logging, requests, json, time
 from src.reports import temp_save_api, temp_save_local
 from src.config_parser import get_command, get_config
+from src.notifer import set_conditions
+from pathlib import Path
 logger = logging.getLogger(__name__)
 
 config = get_config()
@@ -25,6 +27,7 @@ def get_commands_output():
     Process = get_and_deserialize("Process")
     storage_space = get_and_deserialize("Storage")
     return Cpu, Ram, Process, storage_space
+
 
 def organized_commands():
     commands = get_commands_output()
@@ -56,57 +59,70 @@ def organized_commands():
     return organized_dict
     
 
-def local_audit():
-    local_audit_instance = organized_commands()
-    print(get_formated_audit(local_audit_instance))
-    #temp_save_local(local_audit_instance)
-
 
 def evaluete_conditions(local_audit_instance):
     org_dict = local_audit_instance
     cpu = org_dict["CPU_Usage_Percent"]
     ram = org_dict["RAM_Usage_Percent"]
-
+    warnings_found = []
     for devices in org_dict["storage_devices"]:
         storage_space_remaining = devices["storage_FREE"]
         total_storage = devices["storage_SIZE"]
         storage_percentage_remainig = (storage_space_remaining / total_storage) * 100
-        if storage_percentage_remainig< config["ConditionsToEvaluete"]["FreeStorageMin"]:
-            logger.info(f"Espacio libre de {devices["storage_NAME"]} al menos del 20% de capacidad")
         
+        minStorage = config["ConditionsToEvaluete"]["FreeStorageMin"]
+        if storage_percentage_remainig< minStorage:
+            msg = f"WARNING! The device \"{devices["storage_NAME"]}\" is below the configured minimum {minStorage}"
+            logger.warning(msg)
+            warnings_found.append(msg)
+    cpuMax = config["ConditionsToEvaluete"]["CpuMax"]
+    if cpu > cpuMax:
+        msg = f"WARNING! The CPU usage percentage {cpu:.3f} exceeded the configured threshold of {cpuMax}"
+        logger.warning()
+        warnings_found.append(msg)
+    ramMax = config["ConditionsToEvaluete"]["RamMax"]
+    if ram > ramMax:
+        msg = f"WARNING! The RAM usage parcentage {ram:.3f} exceeded tje configured threshold of {ramMax}"
+        logger.warning(msg)
+        warnings_found.append(msg)
     
-    if cpu > config["ConditionsToEvaluete"]["CpuMax"]:
-        logger.info("Cpu arriba de 90%")
-    if ram> config["ConditionsToEvaluete"]["RamMax"]:
-        logger.info("Ram arriba del 80%")
+    if not warnings_found:
+        logger.info(f"Successful local audit. CPU at {cpu:.3f}. Ram at {ram:.3f}. Free storage {storage_space_remaining:.3f}")
 
+    return {
+        "Metrics": org_dict,
+        "Alerts_found": warnings_found,
+        "status": "DANGER" if warnings_found else "OK"
+
+    }
+
+def evaluete_critical_files():
+    critical_files = config["critical_files"]
+    dir = Path(__file__).resolve().parent.parent
+    for name in critical_files:
+        coincidenses = list(dir.rglob(name))
+        if coincidenses:    
+            logger.info(f"Se file {name} was found!")
+        else:
+            logger.warning(f"The file {name} was not found.")
     
-
-
+        
 def get_formated_audit(evaluete_conditions):
     org_audit= evaluete_conditions
 
-    #sorted ordena los procesos en Process = get_most_process()
-    #key=lambda p: p['ram_kb'] basicamente itera process y evalua 
-    #p['ram_kb'] que es la ram y es un int . reverse=True pone numeros grandes primero
-    #por ultimo se corta la lista creo de 0 a 9
     most_process_ram = sorted(org_audit["Processes"], key=lambda p: p["Ram"], reverse=True)[:10]
     most_process_cpu = sorted(org_audit["Processes"], key=lambda p: p["CPU_Percent"], reverse=True)[:10]
 
-    # se crea un diccionario con cada valor importante individual
-
-    # se crea un string formateado para mostrar. 
-    
     line_ram = []
-    for p in most_process_ram: # se reccore la lista most_process_ram
+    for p in most_process_ram:
          line_ram.append(
-             f"  --Name: {p['Name']}   | Id : {p["Id"]} | Cpu: {p['CPU_Percent']} KB | ram: {p['Ram']:<2} KB"
+             f"  --Name: {p['Name']:<9}   | Id : {p["Id"]:<5} | Cpu: {p['CPU_Percent']:<9} KB | ram: {p['Ram']} KB"
          )
 
     line_cpu = []
-    for p in most_process_cpu:  # se reccore la lista most_process_cpu
+    for p in most_process_cpu:
          line_cpu.append(
-             f"  --Name: {p['Name']}   | Id : {p["Id"]} | Cpu: {p['CPU_Percent']} KB | ram: {p['Ram']:<2} KB"
+             f"  --Name: {p['Name']:<9}   | Id : {p["Id"]:<5} | Cpu: {p['CPU_Percent']:<9} KB | ram: {p['Ram']} KB"
          )
     
     line_storage = []
@@ -114,45 +130,44 @@ def get_formated_audit(evaluete_conditions):
         line_storage.append(
             f"Device: {device_ins["storage_NAME"]} | Storage used: {device_ins["storage_USED"]}GB | Storage remaining: {device_ins["storage_FREE"]}GB | Total storage: {device_ins["storage_SIZE"]}"
         )
-    string_cpu_ram = f"Cpu %: {org_audit["CPU_Usage_Percent"]}% Ram: {org_audit["RAM_Usage_Percent"]}%"
+
+    string_cpu_ram = f"Cpu: {org_audit["CPU_Usage_Percent"]:.3f}% Ram: {org_audit["RAM_Usage_Percent"]:.3f}%"
     string_most_cpu = "Most consuming processes by cpu:\n\n" + "\n".join(line_cpu)
     string_most_ram = "Most consuming processes by ram:\n\n" + "\n".join(line_ram)
     string_storage_space = "Devices: ""\n".join(line_storage)
     final_string = "\n\n".join([string_cpu_ram, string_most_cpu, string_most_ram, string_storage_space])
+    
     return final_string
-    #retorna todos los strings formateados con .join
     
-
-
-
+def local_audit():
     
+    local_audit_instance = organized_commands()
+    print(get_formated_audit(local_audit_instance))
+    conditions = evaluete_conditions(local_audit_instance)
+    evaluete_critical_files()
+    temp_save_local(local_audit_instance)
+    set_conditions(conditions)
 
-
-
-def get_api_latency(response):
-
-    return response.elapsed.total_seconds()
-
-def get_api_status_code(response):
-
-    return response.status_code
-
-def save_api_results(response, api_url):
-
-    pass
 
 def print_on_console(status_code, latency, api_url):
-    
-    return f"Audited API: {api_url}. Status code: {status_code}. Lantency: {latency}."
+     
+    print(f"Audited API: {api_url}. Status code: {status_code}. Lantency: {latency}.")
 
 
 def audit_api(api_url):
-    response = requests.get(api_url)
-    status_code = get_api_status_code(response)
-    latency = get_api_latency(response)
-    print = print_on_console(status_code, latency, api_url)
-    #save_api_results(status_code,latency, api_url)
-    return print
+    start_time = time.time()
+    response = requests.get(api_url, timeout=10)
+    status_code = response.status_code
+    latency = time.time() - start_time
+    if status_code == 200:
+        print_on_console(status_code, latency, api_url)
+        logger.info(f"{api_url} OK in {latency}")
+    if status_code > 500:
+        logger.error(f"{api_url} FAIL. Status Code: {status_code}")
     
-if __file__ == "__main__":
-    logger.debug("Estas importando auditor.py desde otro archivo")
+    org_dic_api = {
+        "Status_code": status_code,
+        "Latency": latency,
+        "Api_url":api_url
+    }
+    temp_save_api(org_dic_api)

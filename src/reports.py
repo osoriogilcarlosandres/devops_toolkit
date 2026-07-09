@@ -24,22 +24,10 @@ def save_history(data):
  with open(temp_json, mode='w', encoding="utf-8") as file:
      json.dump(data, file, indent=4)
 
-def unpack_data(data) :
-    unpackdata = {
-        "Cpu: ": data[0][0],
-        "Ram: ": data[0][1],
-        "Procesess: ": data[1],
-        "StorageSpaceUsed: ": data[2][0],
-        "StorageSpaceRemaining: ": data[2][1],
 
-    }
-    return unpackdata
-
-    
 
 def save_json(data, output_path):
     
-    logger.info('Generating report')
     with open(Path(output_path) / "report_JSON.json", mode='w', encoding="utf-8") as write_json:
         json.dump(data, write_json, indent=4)
 
@@ -47,7 +35,7 @@ def save_json(data, output_path):
 def save_csv(data, output_path):
 
     with open(Path(output_path) / f"report_CSV.csv", mode='w') as write_csv:
-        fieldnames = ['Cpu', 'RAM', 'Procesess','StorageSpaceUsed','StorageSpaceRemaining']
+        fieldnames = ['Cpu', 'RAM', 'Procesess','storage_devices']
         write_csv = csv.DictWriter(write_csv, delimiter=',',fieldnames = fieldnames)
         write_csv.writeheader()
         
@@ -73,22 +61,27 @@ def get_output_path(output, base_path = None):
     return Path(outputpath)
 
 def temp_save_local(local_intance):
-    data=unpack_data(local_intance)
+    local_data = local_intance
     history = load_history()
-    history.append(data)
+    history.append(local_data)
     save_history(history)
     
 
-def temp_save_api(arg):
-    return
+def temp_save_api(dic_api):
+    API_url = dic_api
+    history = load_history()
+    history.append(API_url)
+    save_history(history)
+
 
 
 def generate_report(format, output):
     output_path = get_output_path(output)
     export = exporters.get(format)
     history = load_history()
-    export(history, output_path)
-    os.remove(temp_json) # esto remuve el archivo temporal cada vez que se crea un reporte
-
-if __file__ != "__main__":
-    logger.debug("Estas importando reporerts")
+    if history:
+        export(history, output_path)
+        os.remove(temp_json) # esto remuve el archivo temporal cada vez que se crea un reporte
+        logger.info("Report successfully created.")
+    else:
+        logger.error(f"The report has not been created because nothing has been audited yet.")

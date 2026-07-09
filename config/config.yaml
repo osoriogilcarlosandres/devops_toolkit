@@ -6,7 +6,7 @@ Commands:
     Process:  |
                 Get-Process | 
                     Sort-Object CPU -Descending | 
-                    Select-Object -First 30 | 
+                    Select-Object -First 15 | 
                     Select-Object Name, 
                                   Id, 
                                   @{Name="CPU_Percent"; Expression={if ($_.CPU) { $_.CPU } else { 0 }}}, 
@@ -26,7 +26,7 @@ Commands:
     sell: "bash"
     Cpu: top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print "{\"CPU_Usage_Percent\":" 100 - $1 "}"}'
     Ram: free | awk 'NR==2{print "{\"RAM_Usage_Percent\":" ($3/$2)*100 "}"}'
-    Process: ps -eo comm,pid,%cpu,%mem --sort=-%cpu | head -n 31 | awk 'NR>1 {print "{\"Name\":\""$1"\",\"Id\":"$2",\"CPU_Percent\":"$3",\"RAM\":"$4"}"}' | awk 'BEGIN{print "["} {print $0 (NR==1?"":",")} END{print "]"}' | sed 's/},/}/' | sed '$s/},/}/'
+    Process: ps -eo comm,pid,%cpu,%mem --sort=-%cpu | head -n 16 | awk 'NR>1 {print "{\"Name\":\""$1"\",\"Id\":"$2",\"CPU_Percent\":"$3",\"RAM\":"$4"}"}' | awk 'BEGIN{print "["} {print $0 (NR==1?"":",")} END{print "]"}' | sed 's/},/}/' | sed '$s/},/}/'
     Storage: df -B1 --output=source,size,used,avail / | tail -n 1 | awk '{print "{\"DeviceID\":\""$1"\",\"Size\":"$2",\"Used\":"$3",\"Free\":"$4"}"}'
 
 
@@ -43,7 +43,7 @@ critical_files:
   - "config.yaml"
   - "settings.json"
 
-default_format:
-  "json"
-default_output:
-  "./reports/"
+default_format: "json"
+  
+default_output: "./reports/"
+  

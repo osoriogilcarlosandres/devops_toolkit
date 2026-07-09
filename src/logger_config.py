@@ -36,7 +36,3 @@ logger.addHandler(file_rotating_handler)
 logger.addHandler(console_handler)
 
 
-'''for _ in range(500):
-    statement = f"The time is now {str(time.time())}"
-    logger.debug(statement)
-'''
