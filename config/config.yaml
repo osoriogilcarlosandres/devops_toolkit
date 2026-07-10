@@ -41,7 +41,6 @@ ConditionsToEvaluete:
 critical_files:
   - ".env"
   - "config.yaml"
-  - "settings.json"
 
 default_format: "json"
   
