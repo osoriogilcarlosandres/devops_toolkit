@@ -52,5 +52,5 @@ def send_notification(channel = None, conditions = None):
             elements["Processes"] = elements["Processes"][:max_proceses]
         
         channel_func = notifyFn.get(channel)
-        #history is modified bc is a referens
+        #history is modified bc is a referece
         channel_func(str(history))

@@ -13,56 +13,51 @@ logger = logging.getLogger(__name__)
 
 
 def cmd_audit(args):
-    """Se ejecuta cuando el usuario escribe: python main.py audit ..."""
     
     logger.info(f"[audit] Target: {args.target}")
     
     if args.target.lower() == "local":
-        logger.info("Auditando sistema local...")
+        logger.info("Auditing local system...")
         
         local_audit()
 
         
     elif args.target.lower() == "api":
         if not args.url:
-            logger.error("Error: --url es requerido cuando target es 'api'")
+            logger.error("Error: --url It is required when target is 'api'.")
             sys.exit(1)
         audit_api(args.url)
 
 
 def cmd_report(args):
-    """Se ejecuta cuando el usuario escribe: python main.py report ..."""
     logger.info(f"[report] Formato: {args.format} | Destino: {args.output}")
     generate_report(format=args.format.lower(), output=args.output)
 
 
 def cmd_notify(args):
-    """Se ejecuta cuando el usuario escribe: python main.py notify ..."""
     logger.info(f"[notify] Canal: {args.channel}")
     send_notification(channel=args.channel)
-
-
 
 def build_parser():
     parser = argparse.ArgumentParser(
         description="DevOps Automation Toolkit",
-        epilog="Ejemplo: python main.py audit --target local"
+        epilog="Example: python main.py audit --target local"
     )
     
     subparsers = parser.add_subparsers(dest="command", metavar="COMANDO")
     subparsers.required = True  # Error si no se escribe ningún subcomando
 
     # Subcomando: audit
-    audit = subparsers.add_parser("audit", help="Audita el sistema local o una API")
+    audit = subparsers.add_parser("audit", help="Audits the local system or an API.")
     audit.add_argument(
         "--target",
         choices=["local", "api"],
         required=True,
-        help="Qué auditar: 'local' para el sistema, 'api' para una URL"
+        help="What to audit: 'local' for the system, 'api' for a URL."
     )
     audit.add_argument(
         "--url",
-        help="URL a auditar (solo necesario con --target api)"
+        help="URL to audit (only required with --target api)"
     )
     audit.set_defaults(func=cmd_audit)  # Conecta este subcomando con su función
 
@@ -72,23 +67,23 @@ def build_parser():
         "--format",
         choices=["json", "csv", "html"],
         default=config["default_format"],
-        help="Formato del reporte (default: json)"
+        help=f"Report format (default: {config["default_format"]})"
     )
     report.add_argument(
         "--output",
         default=config["default_output"],
-        help="Carpeta donde guardar el reporte (default: ./reports/)"
+        help=f"directory where the report will be saved (default: {config["default_output"]})"
     )
     report.set_defaults(func=cmd_report)
 
     # Subcomando: notify
-    notify = subparsers.add_parser("notify", help="Envía una notificación")
+    notify = subparsers.add_parser("notify", help="Send a notification")
     notify.add_argument(
         "--channel",
         choices=["slack", "discord"],
         
         required=True,
-        help="Canal de notificación"
+        help="Notification channel"
     )
     notify.set_defaults(func=cmd_notify)
 

@@ -191,7 +191,10 @@ def local_audit():
     conditions = evaluete_conditions(local_audit_instance, fortamted_org_dict)
     evaluete_critical_files()
     temp_save_local(local_audit_instance)
-    send_notification(conditions = conditions)
+    try:
+        send_notification(conditions = conditions)
+    except Exception as e:
+        logger.error(f"Notification fail. Error: {e}")
 
 
 def print_on_console(status_code, latency, api_url):
