@@ -69,7 +69,7 @@ bashpytest tests/ -v
 Project structure
 
 devops-toolkit/
-├── src/
+├── src/\n
 │   ├── auditor.py         # Core auditing logic
 │   ├── reports.py         # JSON / CSV / HTML report generation
 │   ├── notifer.py         # Slack / Discord webhook notifications
