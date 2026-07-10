@@ -1,8 +1,8 @@
 import logging
 from logging.handlers import RotatingFileHandler # noqa: F401
 from pathlib import Path
-
-#logger.warning("Look at my logger!") "OHHH, loook, i hame my own logger, this is so much fun! "
+from logging.handlers import TimedRotatingFileHandler
+#logger.warning("Look at my logger!") "OHHH, loook, i have my own logger, this is so much fun! "
 
 #formatter for the handlers
 my_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', 
@@ -21,11 +21,13 @@ logging.getLogger("requests").setLevel(logging.WARNING)
 console_handler = logging.StreamHandler()
 logs_dir = Path(__file__).resolve().parent.parent / "logs"
 logs_dir.mkdir(parents=True, exist_ok=True)
-file_rotating_handler = RotatingFileHandler(
+file_rotating_handler = TimedRotatingFileHandler(
     filename=logs_dir / "app.log",
-    backupCount=10)
-
-
+    when="midnight",
+    interval=1,
+    backupCount=10,
+    encoding="utf-8"
+)
 #asignate formatter to the handlers 
 console_handler.setFormatter(my_formatter)
 file_rotating_handler.setFormatter(my_formatter)

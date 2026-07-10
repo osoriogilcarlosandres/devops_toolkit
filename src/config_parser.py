@@ -5,7 +5,7 @@ from dotenv import load_dotenv, dotenv_values
 logger = logging.getLogger(__name__)
 
 base_path = Path(__file__).resolve().parent.parent
-config_path = Path(base_path) / "config\\config.yaml"
+config_path = Path(base_path) / "config" / "config.yaml"
 env_path = Path(base_path) / ".env"
 
 def load_yaml_config(path = config_path ):
@@ -56,7 +56,11 @@ def get_command(action, config=None):
     
     current_os = get_current_os()
     
-
+    if current_os not in config["Commands"]:
+        raise NotImplementedError(
+            f"No commands configured for OS '{current_os}'."
+            f"Supported: {list(config['Commands'].keys())}"
+        )
 
     os_commands = config["Commands"][current_os]
     return os_commands["shell"], os_commands[action]
