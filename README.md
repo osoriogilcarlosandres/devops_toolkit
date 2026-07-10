@@ -5,6 +5,22 @@ A small CLI toolkit to audit a local machine (CPU, RAM, processes, storage,
 critical config files), audit a REST API endpoint, generate reports
 (JSON / CSV / HTML), and send notifications to Slack or Discord.
 
+The Problem It Solves
+
+In distributed cloud environments or bare-metal setups, 
+deploying heavy monitoring agents (like Datadog, Prometheus, 
+or New Relic) on every transient instance 
+or edge node can be cost-prohibitive or structurally restricted. 
+
+**DevOps Automation Toolkit** solves this by providing an on-demand,
+dependency-light health checker that can be injected via CI/CD, cron jobs,
+or startup scripts to evaluate OS baselines, 
+detect human errors in crucial configuration deployments (e.g., empty `.env` files), 
+and report health directly back to modern communication hubs like Slack or Discord.
+
+Architecture & Component Flow
+
+The system operates via a decoupled multi-module flow managed by a single entry point (`main.py`):
 Features
 
 
@@ -65,24 +81,6 @@ critical_files:
 Running tests
 
 bashpytest tests/ -v
-
-Project structure
-
-devops-toolkit/
-├── src/\n
-│   ├── auditor.py         # Core auditing logic
-│   ├── reports.py         # JSON / CSV / HTML report generation
-│   ├── notifer.py         # Slack / Discord webhook notifications
-│   ├── config_parser.py   # YAML + .env configuration loading
-│   └── logger_config.py   # Logging setup (rotating file handler)
-├── tests/
-│   ├── test_auditor.py
-│   └── test_reports.py
-├── config/
-│   └── config.yaml
-├── .env.example
-├── requirements.txt
-└── main.py
 
 Known limitations
 
