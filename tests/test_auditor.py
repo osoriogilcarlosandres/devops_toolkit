@@ -1,4 +1,4 @@
-import pytest, sys, json
+import pytest, sys, json, logging
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 

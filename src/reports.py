@@ -52,7 +52,7 @@ def save_csv(data, output_path):
                 key: (json.dumps(value) if isinstance(value, (list, dict)) else value)
                 for key, value in entry.items()
             }
-        writer.writerow(row)
+            writer.writerow(row)
 
 def save_html(data, output_path):
 
@@ -72,14 +72,14 @@ def save_html(data, output_path):
         <h1>Audit History</h1>
         <div class="card">
             <h3>Collected Data:</h3>
-            <pre>{{ formatted_history }}</pre>
+            <pre>{{ formated_history }}</pre>
         </div>
     </body>
     </html>
     """
     template = Template(html_template)
     phistory = json.dumps(data, indent=2, ensure_ascii=False)
-    html_final = template.render(historial_formateado=phistory)
+    html_final = template.render(formated_history=phistory)
 
     with open(Path(output_path) / "report_HTML.html", mode="w", encoding="utf-8") as f:
         f.write(html_final)

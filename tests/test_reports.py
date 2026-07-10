@@ -38,7 +38,7 @@ def test_load_history_returns_empty_list_on_corrupt_json(tmp_path, monkeypatch, 
         result = load_history()
 
     assert result == []
-    assert any("historial" in message.lower() for message in caplog.messages)
+    assert any("history" in message.lower() for message in caplog.messages)
 
 def test_save_json(tmp_path):
     test_data = [{"Cpu_Usage": 12.5, "RAM_Usage": 45.8}]
@@ -126,7 +126,7 @@ def test_save_html_renders_history_into_file(tmp_path):
 
     assert expected_file.exists()
     content = expected_file.read_text(encoding="utf-8")
-    assert "Historial de Auditor" in content
+    assert "Audit History" in content
     assert "12.5" in content
 
 

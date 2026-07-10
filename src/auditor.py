@@ -125,7 +125,7 @@ def evaluete_critical_files():
             try:
                 size = coindidense.stat().st_size
             except OSError as e:
-                logger.error(f"Could no stat {coindidense}: {}")
+                logger.error(f"Could no stat {coindidense}: {e}")
                 continue
 
             if size ==0:
