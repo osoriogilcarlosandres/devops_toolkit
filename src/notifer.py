@@ -10,7 +10,7 @@ def not_slack(history):
     payload = {"text": str(history)}
     headers = {"Content-Type": "application/json"}
     respuesta =requests.post(Slack_weebhook_URL, data=json.dumps(payload), headers=headers)
-    if respuesta.status_code == 200:
+    if respuesta.status_code==204:
         logger.info("Succesful notificantion!")
     else:
         logger.critical(f"status code: {respuesta.status_code}")
@@ -20,7 +20,7 @@ def not_discord(history):
     Discord_weebhook_URL = env_config["DISCORD_WEBHOOK_URL"]
     payload = {"content": history}
     respuesta =requests.post(Discord_weebhook_URL, json=payload)
-    if respuesta.status_code == 204:
+    if respuesta.status_code == 200:
         logger.info("Succesful notificantion!")
     else:
         logger.critical(f"status code: {respuesta.status_code}")
@@ -43,7 +43,7 @@ def send_notification(channel = None, conditions = None):
             
     
         not_discord(msg)
-        not_slack(msg)
+        #not_slack(msg)
     
     if not channel is None:
         history = load_history()
