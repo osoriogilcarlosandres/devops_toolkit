@@ -82,24 +82,6 @@ Running tests
 
 bashpytest tests/ -v
 
-Project structure
-
-devops-toolkit/
-├── src/\n
-│   ├── auditor.py         # Core auditing logic
-│   ├── reports.py         # JSON / CSV / HTML report generation
-│   ├── notifer.py         # Slack / Discord webhook notifications
-│   ├── config_parser.py   # YAML + .env configuration loading
-│   └── logger_config.py   # Logging setup (rotating file handler)
-├── tests/
-│   ├── test_auditor.py
-│   └── test_reports.py
-├── config/
-│   └── config.yaml
-├── .env.example
-├── requirements.txt
-└── main.py
-
 Known limitations
 
 
